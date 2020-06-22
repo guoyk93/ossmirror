@@ -87,22 +87,30 @@ func main() {
 
 	filename := filepath.Join(conf.Workspace, path.Base(uri.Path))
 	log.Println("local file:", filename)
-	defer os.Remove(filename)
 
-	var f *os.File
-	if f, err = os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0640); err != nil {
+	var fe bool
+	if fe, err = fileExists(filename); err != nil {
 		return
 	}
-	defer f.Close()
 
-	var res *http.Response
-	if res, err = http.Get(optURL); err != nil {
-		return
-	}
-	defer res.Body.Close()
+	if !fe {
+		defer os.Remove(filename)
 
-	if _, err = io.Copy(f, res.Body); err != nil {
-		return
+		var f *os.File
+		if f, err = os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0640); err != nil {
+			return
+		}
+		defer f.Close()
+
+		var res *http.Response
+		if res, err = http.Get(optURL); err != nil {
+			return
+		}
+		defer res.Body.Close()
+
+		if _, err = io.Copy(f, res.Body); err != nil {
+			return
+		}
 	}
 
 	key := path.Join(uri.Host, uri.Path)
@@ -112,4 +120,15 @@ func main() {
 	}
 
 	log.Println("done")
+}
+
+func fileExists(filename string) (ok bool, err error) {
+	if _, err = os.Stat(filename); err != nil {
+		if os.IsNotExist(err) {
+			err = nil
+		}
+		return
+	}
+	ok = true
+	return
 }

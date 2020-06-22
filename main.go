@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"io"
 	"io/ioutil"
@@ -107,6 +108,11 @@ func main() {
 			return
 		}
 		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusOK {
+			err = fmt.Errorf("bad code: %d", res.StatusCode)
+			return
+		}
 
 		if _, err = io.Copy(f, res.Body); err != nil {
 			return

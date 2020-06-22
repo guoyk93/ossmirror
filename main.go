@@ -120,7 +120,7 @@ func main() {
 	}
 
 	key := path.Join(uri.Host, uri.Path)
-	log.Println("remote file:", path.Join(conf.OSSPublicURL, key))
+	log.Println("remote file:", conf.OSSPublicURL+key)
 	if err = bucket.PutObjectFromFile(key, filename); err != nil {
 		return
 	}

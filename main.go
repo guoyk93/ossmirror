@@ -23,7 +23,7 @@ var (
 )
 
 func sanitizePath(name string) string {
-	return invalidPath.ReplaceAllString(name, "_")
+	return strings.ToLower(invalidPath.ReplaceAllString(name, "_"))
 }
 
 func fileExists(filename string) (ok bool, err error) {

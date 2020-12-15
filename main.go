@@ -14,15 +14,33 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
+
+var (
+	invalidPath = regexp.MustCompile(`[^0-9a-zA-Z._/-]`)
+)
+
+func sanitizePath(name string) string {
+	return invalidPath.ReplaceAllString(name, "_")
+}
+
+func fileExists(filename string) (ok bool, err error) {
+	if _, err = os.Stat(filename); err != nil {
+		if os.IsNotExist(err) {
+			err = nil
+		}
+		return
+	}
+	ok = true
+	return
+}
 
 func exit(err *error) {
 	if *err != nil {
 		log.Println("exited with error:", (*err).Error())
 		os.Exit(1)
-	} else {
-		os.Exit(0)
 	}
 }
 
@@ -86,7 +104,7 @@ func main() {
 		return
 	}
 
-	filename := filepath.Join(conf.Workspace, path.Base(uri.Path))
+	filename := filepath.Join(conf.Workspace, sanitizePath(path.Base(uri.Path)))
 	log.Println("local file:", filename)
 
 	var fe bool
@@ -119,22 +137,11 @@ func main() {
 		}
 	}
 
-	key := path.Join(uri.Host, uri.Path)
+	key := path.Join(uri.Host, sanitizePath(uri.Path))
 	log.Println("remote file:", strings.TrimSuffix(conf.OSSPublicURL, "/")+"/"+strings.TrimPrefix(key, "/"))
 	if err = bucket.PutObjectFromFile(key, filename); err != nil {
 		return
 	}
 
 	log.Println("done")
-}
-
-func fileExists(filename string) (ok bool, err error) {
-	if _, err = os.Stat(filename); err != nil {
-		if os.IsNotExist(err) {
-			err = nil
-		}
-		return
-	}
-	ok = true
-	return
 }
